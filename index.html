@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
+-->
+<html lang="en">
+    <head>
+        <title>Bootstrap Example</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+ //       <script src="https://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Employee's Vertical (basic info.) form</h2> <!-- HEADER -->
+
+            <form id="empForm" method="post"> <!-- form tag method post and action part is removed-->
+
+                <div class="form-group">
+                    <span><label for="empId">Employee ID:</label> 
+                        <label id="empIdMsg"> </label>
+                    </span>
+                    <input type="text" class="form-control" name="empId" id="empId" placeholder="Enter Employee ID" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="empName">Employee Name:</label>
+                    <input type="text" class="form-control" id="empName" placeholder="Enter Employee Name" name="empName">
+                </div>
+
+                <div class="form-group">
+                    <label for="empEmail">Email:</label>
+                    <input type="email" class="form-control" id="empEmail" placeholder="Enter Employee Email" name="empEmail">
+                </div>
+                <input type="button" class="btn btn-primary" id="empSave" value="Save" onclick="saveEmployee();">
+
+            </form>
+        </div>
+        <script>
+            //  function saveEmployee() {
+            // validate form data
+            // creat JPDB request string - token db name relname etc
+            // execute this request
+            // reset the foem after data saved
+            // alert("Information Saved");
+            // } 
+            function saveEmployee() {
+                var jsonStr = validateAndGetFormData(); // this is a separte method to get and validate data
+                if (jsonStr === "") { // jsonstr is a javascript formated data which is to fead in db 
+                    return;     // if there is no data with jsonstr then return 
+                }
+                
+                // below function is to create the PUT request for the jsonStr
+                var putReqStr = createPUTRequest("90932860|-31949281863412644|90948313", jsonStr, "SAMPLE", "EMP-REL");
+                alert(putReqStr);
+
+                jQuery.ajaxSetup({async: false}); // for multithreading (to stop - false)
+
+                // below function execute the PUT request following jsonStr
+                var resultObj = executeCommand(putReqStr, "http://api.login2explore.com:5577", "/api/iml"); //requestMethodtype,base url, endpoint url
+                alert(JSON.stringify(resultObj));
+
+                jQuery.ajaxSetup({async: true}); // for multithreading (to start - true)
+                // if there will be multiple AJAX request and not controlled properly then 
+                // it may distract your page completely and may be it will break your page
+
+                resetForm(); // funtion
+            }
+
+            function validateAndGetFormData() {
+                var empIdVar = $("#empId").val();   // syntax of JQuery $() - getting employee id value in empIdvar variable
+                if (empIdVar === "") {              // if variable value is empty
+                    alert("Employee ID Required Value"); // display the msg in quotes
+                    $("#empId").focus();            // putting focus back to empId
+                    return "";
+                }
+
+                // like empId value validation empName validation is below 
+                var empNameVar = $("#empName").val();
+                if (empNameVar === "") {
+                    alert("Employee Name is Required Value");
+                    $("#empName").focus();
+                    return "";
+                }
+                // like empId value validation empEmail validation is below 
+                var empEmailVar = $("#empEmail").val();
+                if (empEmailVar === "") {
+                    alert("Employee Email is Required Value");
+                    $("#empEmail").focus();
+                    return "";
+                }
+                // jsonStr object body
+                var jsonStrObj = {
+                    empId: empIdVar,
+                    empName: empNameVar,
+                    empEmail: empEmailVar,
+                };
+                return JSON.stringify(jsonStrObj); // it convert to string
+            }
+            // This method is used to create PUT Json request.
+            function createPUTRequest(connToken, jsonObj, dbName, relName) {
+                var putRequest = "{\n"
+                        + "\"token\" : \""
+                        + connToken
+                        + "\","
+                        + "\"dbName\": \""
+                        + dbName
+                        + "\",\n" + "\"cmd\" : \"PUT\",\n"
+                        + "\"rel\" : \""
+                        + relName + "\","
+                        + "\"jsonStr\": \n"
+                        + jsonObj
+                        + "\n"
+                        + "}";
+                return putRequest;
+            }
+
+            function executeCommand(reqString, dbBaseUrl, apiEndPointUrl) {
+                var url = dbBaseUrl + apiEndPointUrl;
+                var jsonObj;
+                
+                
+                $.post(url, reqString, function (result) { //
+                    jsonObj = JSON.parse(result);
+                }).fail(function (result) {
+                    var dataJsonObj = result.responseText;
+                    jsonObj = JSON.parse(dataJsonObj);
+                });
+                return jsonObj;
+            }
+            
+            // This  function will intialise from data and then 
+            // put the focus to the first field
+            // i.e, form will get reset automatically 
+            function resetForm() {
+                $("#empId").val("")
+                $("#empName").val("");
+                $("#empEmail").val("");
+                $("#empId").focus();
+            }
+        </script>
+    </body>
+</html>
